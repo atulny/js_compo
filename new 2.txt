@@ -1,0 +1,173 @@
+<div class="cal">
+  <div class="cal-header">
+  <select class="cal-year"> </select>
+  <select class="cal-month"></select>
+  </div>
+  <div class="cal-content"> </div>
+</div>
+<style>
+.cal{
+  width:232px;
+  border:1px solid #aaa;
+  box-shadow:1px 2px 2px #ccc;
+}
+.cal ,.cal-header{
+      box-sizing: border-box;
+padding:4px 0;
+}
+.cal-day,.cal-dayhdr{
+  
+  text-align:center;
+  vertical-align:middle;
+      vertical-align: middle;
+    box-sizing: content-box;
+}
+.cal-weekend{
+  color:#ccc;
+  
+}
+.cal table{
+   border-collapse: collapse;
+}
+.cal-header{text-align:center}
+tr{    vertical-align: middle;
+    box-sizing: content-box;background-color:white;}
+.cal-valid .selection-indicator:hover{   background-color:#ccc}
+    
+.selection-indicator{
+  cursor: pointer;
+      transition: background-color,color .4s cubic-bezier(.25,.8,.25,1);
+    border-radius: 50%;
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+}    
+.cal-day{color:#aaa;}
+.cal-day.cal-valid{color:#000;}
+.cal-focus .selection-indicator {
+    background: rgb(16,108,200);
+    color: rgba(255,255,255,0.87);
+    border-color: transparent;
+}
+</style>
+
+<script>
+var CAL=(function(){
+  var weekdays=Array(8).join(" ").split("")
+  var calcontainer=null
+  var FILTER=null
+  function cal(date){
+  try{
+      date=date||new Date()
+      var start=new Date(date.getFullYear(),date.getMonth(),1)
+      var end=new Date(date.getFullYear(),date.getMonth()+1,1 )
+      end.setDate(end.getDate()-1)
+      var html=[]
+      curr=start
+
+      while (curr <= end){
+        var wk=html[html.length-1]
+        if (!wk){
+            html.push(wk=["","","","","","",""])
+        } else if(curr.getDay()==0){
+          html.push(wk=["","","","","","",""])
+        }
+        var klasses=["cal-day"];
+        
+        if (curr.getDay()==0 || curr.getDay()==6){
+              klasses.push("cal-weekend")
+              
+        };
+        if (!FILTER || FILTER(curr)){
+              	klasses.push("cal-valid")
+              }
+          wk[curr.getDay()]="<td class='"+klasses.join(" ")+"' data-key='"+(+curr)+"'><span class='selection-indicator'>"+curr.getDate()+"</span></td>"
+          curr.setDate(curr.getDate()+1)
+      }
+
+      var all=html.map(function(e){
+          return "<tr class='cal-week'>"+e.map(function(a){return a||"<td class='cal-day cal-prior-month'>&nbsp;</td>"}).join("")+"</tr>"
+
+      }) 
+
+   calcontainer.querySelector(".cal-content").innerHTML="<table><thead><tr>"+weekdays.join("")+"</tr></thead><tbody>"+all.join("")+"</tbody></table>"
+
+
+      } catch(e){
+      alert(e)
+      }
+  }
+  function focus_cal(ev){
+    var target=ev.target
+    if (!target.dataset.key ){target=target.parentNode}
+    if (target && target.classList.contains("cal-day") &&  target.dataset.key){
+     [].forEach.call(target.parentNode.parentNode.querySelectorAll(".cal-focus"),function(el){
+     el.classList.remove("cal-focus")
+     })
+
+      target.classList.add("cal-focus")
+    }
+
+  }
+  function redraw_cal(){
+  var month=calcontainer.querySelector(".cal-month").value
+  var year=calcontainer.querySelector(".cal-year").value
+  var dt=new Date(+year,+month,1)
+  cal(dt)
+  }
+
+  function init_cal(){
+  try{
+  var curr=new Date(),yr=curr.getFullYear()
+  var monthsel=calcontainer.querySelector(".cal-month")
+  var yearsel=calcontainer.querySelector(".cal-year")
+
+   for( var i=0;i<14;i++){
+     weekdays[curr.getDay()]="<th class='cal-dayhdr'>"+curr.toDateString().split(" ")[0]+"</th>"
+     curr.setDate(curr.getDate()+1)
+    }
+   for( var i=0;i<20;i++){
+       var option = document.createElement("option");
+        option.value = yr-i;
+
+          option.text = yr-i;
+        yearsel.add(option);
+  }
+
+     for( var i=0;i<12;i++){
+         var mnth=new Date(yr,i,1).toDateString().split(" ")[1]
+         var option = document.createElement("option");
+                 option.value = i;
+
+          option.text = mnth;
+        monthsel.add(option);
+    }
+        } catch(e){
+      alert(e)
+      }
+      monthsel.addEventListener("change",redraw_cal)
+      yearsel.addEventListener("change",redraw_cal)
+       calcontainer.querySelector(".cal-content").addEventListener("click",focus_cal)
+
+      setTimeout(cal,100) 
+  }
+  return {
+     init:function(container,filterfn){
+        calcontainer=typeof(container)=="string"?document.querySelector(container):container
+        FILTER=filterfn
+        init_cal()
+     }
+  
+  }
+})();
+function init(){
+  
+     CAL.init(".cal",function(date){
+       if ((date.getFullYear() < 2015 || date.getFullYear() > 2016 || date.getDay() == 0 || date.getDay() == 6)){return false}
+       return true
+     })
+}
+init()
+ </script>    
+	 
